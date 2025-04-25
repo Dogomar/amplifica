@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCR com Azure - Webcam</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.0/open-dyslexic.min.css">
+  <style>
+    body{
+      align-items: center;
+      flex-direction: column;
+      display: flex;
+      font-family: 16px;
+    }
+    #container {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+    }
+    video, canvas {
+      border-radius: 10px;
+    }
+    #overlay {
+      position: absolute;
+      border: 1px dashed red;
+      pointer-events: none;
+    }
+    #videoWrapper {
+      position: relative;
+      display: inline-block;
+    }
+    #resultbox{
+      border-radius: 10px;
+      background-color: #16161f;
+      padding: 5px;
+      padding-left: 10px;
+      color: greenyellow;
+      width: 1000px;
+      height: 300px;
+      display: flex;
+      position: relative;
+    }
+    #btn-ocr{
+      margin: 10px;
+    }
+    .features{
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    #btnLegal{
+      display: flex;
+    }
+    @font-face {
+      font-family: 'OpenDyslexic';
+      src: url('opendyslexic-0.91.12/compiled/OpenDyslexic-Bold-Italic.woff2') format('woff2'),
+          url('opendyslexic-0.91.12/compiled/OpenDyslexic-Bold-Italic.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+    .opendyslexic {
+    font-family: 'OpenDyslexic', sans-serif !important;
+    }
+    .opendyslexic #resultadoOCR {
+    font-family: 'OpenDyslexic', sans-serif !important;
+    } 
+
+
+    /* apartir daqui é chatgpt pra fazer o botão com menu de acessibilidade */
+    
+    #acessibilidade-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      padding: 10px 15px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* Janelinha de acessibilidade */
+    #acessibilidade-panel {
+      position: fixed;
+      bottom: 70px;
+      right: 20px;
+      width: 200px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 10px;
+      display: none; /* escondida por padrão */
+      z-index: 999;
+    }
+
+    #acessibilidade-panel button {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      background: #eee;
+      cursor: pointer;
+    }
+
+    #acessibilidade-panel button:hover {
+      background: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h2>OCR via Webcam com Azure – Reconhecimento de Texto e Manuscritos</h2>
+
+  <div id="container">
+    <div id="videoWrapper">
+      <video id="webcam" autoplay playsinline width="1000" height="750"></video>
+      <div id="overlay"></div>
+    </div>
+    <div>
+      <canvas id="zoomCanvas" width="1000" height="750"></canvas>
+    </div>
+  </div>
+
+  <div id="btn-ocr">
+    <button onclick="capturarEAnalisar()">Analisar Texto com Azure</button>
+  </div>
+    
+  <div id="resultbox">
+    <pre id="resultadoOCR" contenteditable="true"></pre>
+    <div class="features">
+      <select id="exportFormat">
+        <option value="txt">TXT</option>
+        <!-- <option value="docx">DOCX</option> -->
+        <option value="pdf">PDF</option>
+      </select>
+      <button onclick="baixarTexto()" title="Baixar">📄</button> |
+      <button onclick="narrarTexto()" title="Narrar">🎤</button>
+    </div>
+  </div>
+
+  <button id="acessibilidade-btn">♿</button>
+
+  <div id="acessibilidade-panel">
+    <label for="">aumentar/abaixar fonte</label>
+    <div id="btnLegal">
+      <button id="+">+</button>
+      <button id="-">-</button>
+    </div>
+    <button id="contraste">Contraste alto</button>
+    <button id="modoDaltonico">Modo daltonico</button>
+    <button onclick="toggleOpenDyslexic()">Fonte Dislexica</button>
+  </div>
+
+<script src="script.js"></script>
+</body>
+</html>

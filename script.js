@@ -227,26 +227,50 @@ function narrarTexto() {
   narrarComAzure(texto);
 }
 
-function baixarTexto() {
-const texto = resultado.textContent;
-const tipo = document.getElementById('exportFormat').value;
+async function baixarTexto() {
+  const texto = resultado.textContent;
+  const tipo = document.getElementById('exportFormat').value;
 
-let blob;
-if (tipo === 'txt') {
-  blob = new Blob([texto], { type: 'text/plain' });
-} else if (tipo === 'docx') {
-  blob = new Blob([texto], { type: 'application/msword' });
-} else if (tipo === 'pdf') {
-  alert('Geração de PDF não implementada neste exemplo.');
-  return;
-} else {
-  alert("Formato inválido");
-  return;
-}
+  if (tipo === 'pdf') {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-const url = URL.createObjectURL(blob);
-const a = document.createElement("a");
-a.href = url;
-a.download = `ocr_output.${tipo}`;
-a.click();
+    const marginLeft = 10;
+    const marginTop = 10;
+    const lineHeight = 10;
+    const pageHeight = doc.internal.pageSize.height;
+
+    // Divide o texto em linhas que cabem na página
+    const linhas = doc.splitTextToSize(texto, 180); // 180 = largura da página - margens
+    let y = marginTop;
+
+    for (const linha of linhas) {
+      if (y + lineHeight > pageHeight - marginTop) {
+        doc.addPage();
+        y = marginTop;
+      }
+      doc.text(linha, marginLeft, y);
+      y += lineHeight;
+    }
+
+    doc.save("ocr_output.pdf");
+    return;
+  }
+
+  // Exportação como TXT ou DOCX
+  let blob;
+  if (tipo === 'txt') {
+    blob = new Blob([texto], { type: 'text/plain' });
+  } else if (tipo === 'docx') {
+    blob = new Blob([texto], { type: 'application/msword' });
+  } else {
+    alert("Formato inválido");
+    return;
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ocr_output.${tipo}`;
+  a.click();
 }

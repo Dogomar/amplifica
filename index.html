@@ -7,16 +7,21 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.0/open-dyslexic.min.css">
   <style>
-    body{
+    body {
       align-items: center;
       flex-direction: column;
       display: flex;
-      font-family: 16px;
+      font-size: 16px;
     }
     #container {
       display: flex;
       flex-direction: row;
       gap: 20px;
+      align-items: flex-start;
+    }
+    #videoWrapper {
+      position: relative;
+      display: inline-block;
     }
     video, canvas {
       border-radius: 10px;
@@ -26,30 +31,35 @@
       border: 1px dashed red;
       pointer-events: none;
     }
-    #videoWrapper {
-      position: relative;
-      display: inline-block;
-    }
-    #resultbox{
+    #resultbox {
       border-radius: 10px;
       background-color: #16161f;
       padding: 5px;
       padding-left: 10px;
       color: greenyellow;
       width: 1000px;
-      height: 300px;
+      height: 750px;
       display: flex;
       position: relative;
     }
-    #btn-ocr{
+    #zoomCanvas {
+      visibility: hidden; /* Use visibility instead of display to keep canvas active */
+      position: absolute; /* Overlap with resultbox */
+      top: 0;
+      left: 0;
+    }
+    #resultbox.hidden {
+      visibility: hidden; /* Hide resultbox without removing from DOM */
+    }
+    #btn-ocr {
       margin: 10px;
     }
-    .features{
+    .features {
       position: absolute;
       top: 10px;
       right: 10px;
     }
-    #btnLegal{
+    #btnLegal {
       display: flex;
     }
     @font-face {
@@ -60,15 +70,16 @@
       font-style: normal;
     }
     .opendyslexic {
-    font-family: 'OpenDyslexic', sans-serif !important;
+      font-family: 'OpenDyslexic', sans-serif !important;
     }
     .opendyslexic #resultadoOCR {
-    font-family: 'OpenDyslexic', sans-serif !important;
-    } 
-
-
-    /* apartir daqui é chatgpt pra fazer o botão com menu de acessibilidade */
-    
+      font-family: 'OpenDyslexic', sans-serif !important;
+    }
+    .amplify-btn {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+    }
     #acessibilidade-btn {
       position: fixed;
       bottom: 20px;
@@ -81,8 +92,6 @@
       border-radius: 8px;
       cursor: pointer;
     }
-
-    /* Janelinha de acessibilidade */
     #acessibilidade-panel {
       position: fixed;
       bottom: 70px;
@@ -93,10 +102,9 @@
       border-radius: 8px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       padding: 10px;
-      display: none; /* escondida por padrão */
+      display: none;
       z-index: 999;
     }
-
     #acessibilidade-panel button {
       width: 100%;
       margin-bottom: 8px;
@@ -106,7 +114,6 @@
       background: #eee;
       cursor: pointer;
     }
-
     #acessibilidade-panel button:hover {
       background: #ddd;
     }
@@ -117,29 +124,28 @@
 
   <div id="container">
     <div id="videoWrapper">
-      <video id="webcam" autoplay playsinline width="1000" height="750"></video>
+      <video id="webcam" autoplay playsinline width="1000px" height="750px"></video>
       <div id="overlay"></div>
+      <button class="amplify-btn" id="amp-btn" onclick="toggleAmpliar()">Ampliar</button>
     </div>
-    <div>
-      <canvas id="zoomCanvas" width="1000" height="750"></canvas>
+    <div style="position: relative; width: 1000px; height: 750px;">
+      <div id="resultbox">
+        <pre id="resultadoOCR" contenteditable="true"></pre>
+        <div class="features">
+          <select id="exportFormat">
+            <option value="txt">TXT</option>
+            <option value="pdf">PDF</option>
+          </select>
+          <button onclick="baixarTexto()" title="Baixar">📄</button> |
+          <button onclick="narrarTexto()" title="Narrar">🎤</button>
+        </div>
+      </div>
+      <canvas id="zoomCanvas" width="1000px" height="750"></canvas>
     </div>
   </div>
 
   <div id="btn-ocr">
     <button onclick="capturarEAnalisar()">Analisar Texto com Azure</button>
-  </div>
-    
-  <div id="resultbox">
-    <pre id="resultadoOCR" contenteditable="true"></pre>
-    <div class="features">
-      <select id="exportFormat">
-        <option value="txt">TXT</option>
-        <!-- <option value="docx">DOCX</option> -->
-        <option value="pdf">PDF</option>
-      </select>
-      <button onclick="baixarTexto()" title="Baixar">📄</button> |
-      <button onclick="narrarTexto()" title="Narrar">🎤</button>
-    </div>
   </div>
 
   <button id="acessibilidade-btn">♿</button>
@@ -155,6 +161,6 @@
     <button onclick="toggleOpenDyslexic()">Fonte Dislexica</button>
   </div>
 
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

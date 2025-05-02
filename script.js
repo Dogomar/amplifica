@@ -9,11 +9,13 @@ const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('overlay');
 const videoWrapper = document.getElementById('videoWrapper');
 const resultado = document.getElementById('resultadoOCR');
+const resultbox = document.getElementById('resultbox');
+const zoomCanvas = document.getElementById('zoomCanvas');
 const contrasteBtn = document.getElementById('contraste');
-const fontSizeInc = document.getElementById('+')
-const fontSizeDec = document.getElementById('-')
-const modoDaltonico = document.getElementById('modoDaltonico')
-const accessibilityPanel = document.getElementById ('accessibility-panel')
+const fontSizeInc = document.getElementById('+');
+const fontSizeDec = document.getElementById('-');
+const modoDaltonico = document.getElementById('modoDaltonico');
+const accessibilityPanel = document.getElementById('acessibilidade-panel');
 
 let contrasteAtivado = false;
 let selection = null;
@@ -21,6 +23,7 @@ let isSelecting = false;
 let startX = 0;
 let startY = 0;
 let tamanhoFonteAtual = 16;
+let isAmplified = false;
 
 async function startWebcam() {
   try {
@@ -66,9 +69,16 @@ videoWrapper.addEventListener('mouseup', (e) => {
   const width = Math.abs(endX - startX);
   const height = Math.abs(endY - startY);
   selection = { x, y, width, height };
+  capturarEAnalisar(); // Automatically trigger OCR on selection
 });
 
 function drawZoomed() {
+  // Only draw if canvas is in a valid state
+  if (!ctx || canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+    requestAnimationFrame(drawZoomed);
+    return;
+  }
+
   const videoWidth = video.videoWidth;
   const videoHeight = video.videoHeight;
   const displayWidth = video.clientWidth;
@@ -85,20 +95,39 @@ function drawZoomed() {
     const sWidth = selection.width * scaleX;
     const sHeight = selection.height * scaleY;
 
-    // 🔍 Filtro melhora contraste e legibilidade
-    // ctx.filter = 'contrast(200%) brightness(120%) grayscale(100%)';
     ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
-    ctx.filter = 'none';
   }
 
   requestAnimationFrame(drawZoomed);
 }
 
-startWebcam().then(drawZoomed);
+function toggleAmpliar() {
+  isAmplified = !isAmplified;
+  if (isAmplified) {
+    resultbox.classList.add('hidden');
+    zoomCanvas.style.visibility = 'visible';
+    document.getElementById('amp-btn').textContent = 'Voltar';
+  } else {
+    resultbox.classList.remove('hidden');
+    zoomCanvas.style.visibility = 'hidden';
+    document.getElementById('amp-btn').textContent = 'Ampliar';
+  }
+}
 
-function capturarEAnalisar() {
+async function capturarEAnalisar() {
+  // Ensure canvas is in a valid state before capturing
+  if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+    resultado.textContent = "Erro: Canvas não está pronto. Tente novamente.";
+    return;
+  }
+
   resultado.textContent = "Analisando com Azure OCR...";
   canvas.toBlob(async function(blob) {
+    if (!blob) {
+      resultado.textContent = "Erro: Falha ao capturar imagem do canvas.";
+      return;
+    }
+
     try {
       const url = `${endpoint}/vision/v3.2/read/analyze`;
 
@@ -114,7 +143,6 @@ function capturarEAnalisar() {
       const operationLocation = response.headers.get("operation-location");
       if (!operationLocation) throw new Error("Falha ao obter operação OCR.");
 
-      // Aguarda a resposta assíncrona
       let result;
       while (true) {
         const res = await fetch(operationLocation, {
@@ -130,7 +158,6 @@ function capturarEAnalisar() {
         await new Promise(r => setTimeout(r, 1000));
       }
 
-      // Exibir texto final
       let textoReconhecido = '';
       for (const page of result) {
         for (const line of page.lines) {
@@ -148,8 +175,8 @@ function capturarEAnalisar() {
 
 async function narrarComAzure(texto) {
   const subscriptionKey = '8USfj4ZObcOCdModY3PgpN20wUDAOv3d7jk3FaSNvPzL8ijFEPIkJQQJ99BDACZoyfiXJ3w3AAAYACOGFlGA'; // sua chave do Azure Speech
-  const region = 'brazilsouth'; // ex: brazilsouth
-  const voice = 'pt-BR-FranciscaNeural'; // voz natural do Azure
+  const region = 'brazilsouth';
+  const voice = 'pt-BR-FranciscaNeural';
 
   const url = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
 
@@ -179,10 +206,10 @@ async function narrarComAzure(texto) {
     const audio = new Audio(audioUrl);
     audio.play();
 
-  } catch (err) {
-    alert('Erro ao narrar com Azure: ' + err.message);
+    } catch (err) {
+      alert('Erro ao narrar com Azure: ' + err.message);
+    }
   }
-}
 
 const btn = document.getElementById('acessibilidade-btn');
 const panel = document.getElementById('acessibilidade-panel');
@@ -192,8 +219,8 @@ btn.addEventListener('click', () => {
 });
 
 function toggleOpenDyslexic() {
-    document.body.classList.toggle('opendyslexic');
-}  
+  document.body.classList.toggle('opendyslexic');
+}
 
 contrasteBtn.addEventListener('click', () => {
   if (!contrasteAtivado) {
@@ -204,6 +231,7 @@ contrasteBtn.addEventListener('click', () => {
     contrasteAtivado = false;
   }
 });
+
 modoDaltonico.addEventListener('click', () => {
   if (!contrasteAtivado) {
     document.body.style.filter = 'saturate(80%) hue-rotate(30deg)';
@@ -213,13 +241,15 @@ modoDaltonico.addEventListener('click', () => {
     contrasteAtivado = false;
   }
 });
+
 fontSizeInc.addEventListener('click', () => {
-    tamanhoFonteAtual += 2;
-    document.body.style.fontSize = `${tamanhoFonteAtual}px`;
+  tamanhoFonteAtual += 2;
+  document.body.style.fontSize = `${tamanhoFonteAtual}px`;
 });
+
 fontSizeDec.addEventListener('click', () => {
-    tamanhoFonteAtual += -2;
-    document.body.style.fontSize = `${tamanhoFonteAtual}px`;
+  tamanhoFonteAtual -= 2;
+  document.body.style.fontSize = `${tamanhoFonteAtual}px`;
 });
 
 function narrarTexto() {
@@ -240,8 +270,7 @@ async function baixarTexto() {
     const lineHeight = 10;
     const pageHeight = doc.internal.pageSize.height;
 
-    // Divide o texto em linhas que cabem na página
-    const linhas = doc.splitTextToSize(texto, 180); // 180 = largura da página - margens
+    const linhas = doc.splitTextToSize(texto, 180);
     let y = marginTop;
 
     for (const linha of linhas) {
@@ -257,12 +286,9 @@ async function baixarTexto() {
     return;
   }
 
-  // Exportação como TXT ou DOCX
   let blob;
   if (tipo === 'txt') {
     blob = new Blob([texto], { type: 'text/plain' });
-  } else if (tipo === 'docx') {
-    blob = new Blob([texto], { type: 'application/msword' });
   } else {
     alert("Formato inválido");
     return;
@@ -274,3 +300,5 @@ async function baixarTexto() {
   a.download = `ocr_output.${tipo}`;
   a.click();
 }
+
+startWebcam().then(drawZoomed);

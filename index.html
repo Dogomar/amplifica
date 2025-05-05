@@ -16,7 +16,7 @@
     #container {
       display: flex;
       flex-direction: row;
-      gap: 20px;
+      gap: 0px;
       align-items: flex-start;
     }
     #videoWrapper {
@@ -24,7 +24,7 @@
       display: inline-block;
     }
     video, canvas {
-      border-radius: 10px;
+      border-radius: 10px 0px 0px 10px;
     }
     #overlay {
       position: absolute;
@@ -32,13 +32,14 @@
       pointer-events: none;
     }
     #resultbox {
-      border-radius: 10px;
+      border-radius: 0px 10px 10px 0px;
+      border-left: solid 1px greenyellow;
       background-color: #16161f;
       padding: 5px;
       padding-left: 10px;
       color: greenyellow;
       width: 1000px;
-      height: 750px;
+      height: 740px;
       display: flex;
       position: relative;
     }
@@ -47,6 +48,7 @@
       position: absolute; /* Overlap with resultbox */
       top: 0;
       left: 0;
+      border-radius: 0px 10px 10px 0px;
     }
     #resultbox.hidden {
       visibility: hidden; /* Hide resultbox without removing from DOM */

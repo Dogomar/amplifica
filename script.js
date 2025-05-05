@@ -72,8 +72,15 @@ videoWrapper.addEventListener('mouseup', (e) => {
   capturarEAnalisar(); // Automatically trigger OCR on selection
 });
 
+let isDrawing = true; // Variável para controlar o loop de animação
+
 function drawZoomed() {
-  // Only draw if canvas is in a valid state
+  // Parar o loop se o canvas não estiver visível
+  if (zoomCanvas.style.visibility === 'hidden' || !isDrawing) {
+    return;
+  }
+
+  // Verificar se o canvas está em um estado válido
   if (!ctx || canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
     requestAnimationFrame(drawZoomed);
     return;
@@ -107,6 +114,40 @@ function toggleAmpliar() {
     resultbox.classList.add('hidden');
     zoomCanvas.style.visibility = 'visible';
     document.getElementById('amp-btn').textContent = 'Voltar';
+    isDrawing = true; // Ativar o loop de animação
+    drawZoomed(); // Iniciar o loop
+  } else {
+    resultbox.classList.remove('hidden');
+    zoomCanvas.style.visibility = 'hidden';
+    document.getElementById('amp-btn').textContent = 'Ampliar';
+    isDrawing = false; // Pausar o loop de animação
+    // Forçar uma renderização no canvas para garantir que ele esteja pronto para o próximo OCR
+    if (selection) {
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+      const displayWidth = video.clientWidth;
+      const displayHeight = video.clientHeight;
+
+      const scaleX = videoWidth / displayWidth;
+      const scaleY = videoHeight / displayHeight;
+
+      const sx = selection.x * scaleX;
+      const sy = selection.y * scaleY;
+      const sWidth = selection.width * scaleX;
+      const sHeight = selection.height * scaleY;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+    }
+  }
+}
+
+function toggleAmpliar() {
+  isAmplified = !isAmplified;
+  if (isAmplified) {
+    resultbox.classList.add('hidden');
+    zoomCanvas.style.visibility = 'visible';
+    document.getElementById('amp-btn').textContent = 'Voltar';
   } else {
     resultbox.classList.remove('hidden');
     zoomCanvas.style.visibility = 'hidden';
@@ -115,13 +156,38 @@ function toggleAmpliar() {
 }
 
 async function capturarEAnalisar() {
-  // Ensure canvas is in a valid state before capturing
+  // Verifique se o canvas está pronto
   if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
     resultado.textContent = "Erro: Canvas não está pronto. Tente novamente.";
     return;
   }
 
+  // Forçar renderização do frame atual no canvas
+  if (selection) {
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
+    const displayWidth = video.clientWidth;
+    const displayHeight = video.clientHeight;
+
+    const scaleX = videoWidth / displayWidth;
+    const scaleY = videoHeight / displayHeight;
+
+    const sx = selection.x * scaleX;
+    const sy = selection.y * scaleY;
+    const sWidth = selection.width * scaleX;
+    const sHeight = selection.height * scaleY;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+  } else {
+    // Se não houver seleção, capturar o vídeo inteiro
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  }
+
   resultado.textContent = "Analisando com Azure OCR...";
+
+  // Capturar o blob após garantir que o canvas está desenhado
   canvas.toBlob(async function(blob) {
     if (!blob) {
       resultado.textContent = "Erro: Falha ao capturar imagem do canvas.";

@@ -12,7 +12,41 @@
       flex-direction: column;
       display: flex;
       font-size: 16px;
+      margin: 0;
     }
+    header {
+    background-color: #fff;
+    box-shadow: #16161f6c 1px 0px 50px 1px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    width: 98.1vw;
+    margin-bottom: 50px;
+    }
+    .logo img {
+    width: 240px;
+    }
+    nav {
+  display: flex;
+  gap: 30px;
+}
+
+nav a {
+  color: #000000;
+  text-decoration: none;
+  font-weight: 400;
+  font-size: 22px;
+  transition: all 0.5s ease;
+  margin-left: 25px;
+}
+
+nav a:hover {
+  color: #c8dc65;
+}
     #container {
       display: flex;
       flex-direction: row;
@@ -60,6 +94,53 @@
       position: absolute;
       top: 10px;
       right: 10px;
+      display: flex;
+      flex-direction: row;
+    }
+    .export-btn{
+      background-color: #BC9BF3;
+      border-radius: 50px;
+      border-bottom: solid 5px #9174c0;
+    }
+    .narrar-btn{
+      background-color: #BC9BF3;
+      border-radius: 50px;
+      border-bottom: solid 5px #9174c0;
+    }
+    #exportFormat{
+      border-radius: 20px;
+      margin-right: 5px;
+    }
+    .changeable-canvas {
+      position: absolute;
+      top: 10px;
+      left: 450px; /* Ajustado para alinhar com a posição original */
+      display: flex;
+      flex-direction: row;
+      z-index: 10; /* Garante que os botões fiquem acima do canvas e resultbox */
+    }
+    .amplify-btn, .transcribe-btn {
+      padding: 20px;
+      border: none;
+    }
+    .amplify-btn:hover, .transcribe-btn:hover {
+      cursor: pointer;
+    }
+    .amplify-btn {
+      background-color: #BC9BF3;
+      border-radius: 50px 0px 0px 50px;
+      border-bottom: solid 5px #9174c0;
+    }
+    .transcribe-btn {
+      background-color: #BC9BF3;
+      border-radius: 0px 50px 50px 0px;
+      border-bottom: solid 5px #9174c0;
+      border-left: solid 1px #B9D440;
+    }
+    .amplify-btn.active, .transcribe-btn.active {
+      background-color: #9174c0;
+      border-bottom: solid 5px #6b5090;
+      color: white;
     }
     #btnLegal {
       display: flex;
@@ -76,11 +157,6 @@
     }
     .opendyslexic #resultadoOCR {
       font-family: 'OpenDyslexic', sans-serif !important;
-    }
-    .amplify-btn {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
     }
     #acessibilidade-btn {
       position: fixed;
@@ -122,13 +198,18 @@
   </style>
 </head>
 <body>
-  <h2>OCR via Webcam com Azure – Reconhecimento de Texto e Manuscritos</h2>
+  <header>
+    <nav>
+      <a href="#">Voltar</a>
+    </nav>
+    <h2>OCR via Webcam com Azure – Reconhecimento de Texto e Manuscritos</h2>
+    <div class="logo"><img src="logo.png" alt="Logo" /></div>
+  </header>
 
   <div id="container">
     <div id="videoWrapper">
       <video id="webcam" autoplay playsinline width="1000px" height="750px"></video>
       <div id="overlay"></div>
-      <button class="amplify-btn" id="amp-btn" onclick="toggleAmpliar()">Ampliar</button>
     </div>
     <div style="position: relative; width: 1000px; height: 750px;">
       <div id="resultbox">
@@ -138,16 +219,18 @@
             <option value="txt">TXT</option>
             <option value="pdf">PDF</option>
           </select>
-          <button onclick="baixarTexto()" title="Baixar">📄</button> |
-          <button onclick="narrarTexto()" title="Narrar">🎤</button>
-        </div>
+            <div class="features-btn">
+              <button onclick="baixarTexto()" title="Baixar" class="export-btn">📄</button>
+              <button onclick="narrarTexto()" title="Narrar" class="narrar-btn">🎤</button>
+            </div>
+          </div>
       </div>
       <canvas id="zoomCanvas" width="1000px" height="750"></canvas>
+      <div class="changeable-canvas">
+        <button class="amplify-btn" id="amp-btn">Zoom</button>
+        <button class="transcribe-btn" id="trs-btn">Transcrever</button>
+      </div>
     </div>
-  </div>
-
-  <div id="btn-ocr">
-    <button onclick="capturarEAnalisar()">Analisar Texto com Azure</button>
   </div>
 
   <button id="acessibilidade-btn">♿</button>

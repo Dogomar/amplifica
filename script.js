@@ -108,52 +108,46 @@ function drawZoomed() {
   requestAnimationFrame(drawZoomed);
 }
 
-function toggleAmpliar() {
-  isAmplified = !isAmplified;
-  if (isAmplified) {
-    resultbox.classList.add('hidden');
-    zoomCanvas.style.visibility = 'visible';
-    document.getElementById('amp-btn').textContent = 'Voltar';
-    isDrawing = true; // Ativar o loop de animação
-    drawZoomed(); // Iniciar o loop
-  } else {
-    resultbox.classList.remove('hidden');
-    zoomCanvas.style.visibility = 'hidden';
-    document.getElementById('amp-btn').textContent = 'Ampliar';
-    isDrawing = false; // Pausar o loop de animação
-    // Forçar uma renderização no canvas para garantir que ele esteja pronto para o próximo OCR
-    if (selection) {
-      const videoWidth = video.videoWidth;
-      const videoHeight = video.videoHeight;
-      const displayWidth = video.clientWidth;
-      const displayHeight = video.clientHeight;
+function activateZoom() {
+  isAmplified = true;
+  resultbox.classList.add('hidden');
+  zoomCanvas.style.visibility = 'visible';
+  document.getElementById('amp-btn').classList.add('active');
+  document.getElementById('trs-btn').classList.remove('active');
+  isDrawing = true;
+  drawZoomed();
+}
 
-      const scaleX = videoWidth / displayWidth;
-      const scaleY = videoHeight / displayHeight;
+// Função para ativar o modo de transcrição
+function activateTranscription() {
+  isAmplified = false;
+  resultbox.classList.remove('hidden');
+  zoomCanvas.style.visibility = 'hidden';
+  document.getElementById('amp-btn').classList.remove('active');
+  document.getElementById('trs-btn').classList.add('active');
+  isDrawing = false;
+  if (selection) {
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
+    const displayWidth = video.clientWidth;
+    const displayHeight = video.clientHeight;
 
-      const sx = selection.x * scaleX;
-      const sy = selection.y * scaleY;
-      const sWidth = selection.width * scaleX;
-      const sHeight = selection.height * scaleY;
+    const scaleX = videoWidth / displayWidth;
+    const scaleY = videoHeight / displayHeight;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
-    }
+    const sx = selection.x * scaleX;
+    const sy = selection.y * scaleY;
+    const sWidth = selection.width * scaleX;
+    const sHeight = selection.height * scaleY;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
   }
 }
 
-function toggleAmpliar() {
-  isAmplified = !isAmplified;
-  if (isAmplified) {
-    resultbox.classList.add('hidden');
-    zoomCanvas.style.visibility = 'visible';
-    document.getElementById('amp-btn').textContent = 'Voltar';
-  } else {
-    resultbox.classList.remove('hidden');
-    zoomCanvas.style.visibility = 'hidden';
-    document.getElementById('amp-btn').textContent = 'Ampliar';
-  }
-}
+// Associar eventos aos botões
+document.getElementById('amp-btn').addEventListener('click', activateZoom);
+document.getElementById('trs-btn').addEventListener('click', activateTranscription);
 
 async function capturarEAnalisar() {
   // Verifique se o canvas está pronto
